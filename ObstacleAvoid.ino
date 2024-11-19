@@ -16,13 +16,11 @@
 
 #define servoPin 9 //Servo pin
 
-int set = 15;
+int set = 8;
 int distance_L, distance_F, distance_R;
 
-int lMotSpeed = 150;
-int rMotSpeed = 150;
-int lTurnSpeed= 140;
-int rTurnSpeed = 140;
+int moveSpeed = 130;
+int turnSpeed= 110;
 
 void setup()
 {
@@ -42,13 +40,13 @@ void setup()
   pinMode (echo, INPUT);
   pinMode (trigger, OUTPUT);
   
-  analogWrite(lMotPWM, lMotSpeed);
-  analogWrite(rMotPWM, rMotSpeed);
+  analogWrite(lMotPWM, moveSpeed);
+  analogWrite(rMotPWM, moveSpeed);
 
   stop();
   delay(100);
   
-  servoPulse(servoPin, 55);
+  servoPulse(servoPin, 44);
   
   Serial.begin(9600);
 
@@ -57,38 +55,46 @@ void setup()
 
 void loop()
 {  
-  // delay(40);
+  delay(40);
   int lSensStat = digitalRead(lSensor);
   int rSensStat = digitalRead(rSensor);
   distance_F = Ultrasonic_read();
   distance_F = distance_F == 0 ? 30: distance_F;
 
-  Serial.println(distance_F);
+  //Serial.println(distance_F);
 
   if (!lSensStat && !rSensStat) //both sensors detected white floor. go straight or check side
   {
     if(distance_F > set)
     {
       forward();
+      Serial.println("forward");
     }
     else
     {
       turnAround(lSensStat);
+      Serial.println("turnAround");
     }
   }
   if (!lSensStat && rSensStat) //detected black floor on right (off), so turn right 
   {
     turnRight();
+    Serial.println("turnRight");
   }
 
   if (lSensStat && !rSensStat) //detected black floor on left (off), so turn left
   {
     turnLeft();
+    Serial.println("turnLeft");
   }
 
   if (lSensStat && rSensStat) //detected black floor on both sensor, so stop!
   {
     backward();
+    turnSpeed = 80;
+    turnLeft();
+    turnSpeed = 110;
+    Serial.println("backward");
   }
 }
 
@@ -117,13 +123,13 @@ void turnAround(int lSensStat)
 {
   stop();
   delay(300);
-  lTurnSpeed = 130;
+  turnSpeed = 130;
   while(!lSensStat)
   {
     lSensStat = digitalRead(lSensor);
     turnLeft();
   }
-  lTurnSpeed = 150;
+  turnSpeed = 150;
   stop();
   delay(300);
 }
@@ -133,12 +139,12 @@ void forward ()
   //set left motor control parameter
   digitalWrite (lMotNeg, LOW);
   digitalWrite (lMotPos, HIGH);
-  analogWrite(lMotPWM, lMotSpeed);   
+  analogWrite(lMotPWM, moveSpeed);   
    
   //set right motor control parameters
   digitalWrite (rMotNeg, LOW);    
   digitalWrite (rMotPos, HIGH);
-  analogWrite(rMotPWM, rMotSpeed);
+  analogWrite(rMotPWM, moveSpeed);
 }
 
 void backward ()
@@ -146,34 +152,34 @@ void backward ()
   //set left motor control parameter
   digitalWrite (lMotNeg, HIGH);
   digitalWrite (lMotPos, LOW);
-  analogWrite(lMotPWM, 1.5*lMotSpeed);   
+  analogWrite(lMotPWM, 1.5*moveSpeed);   
    
   //set right motor control parameters
   digitalWrite (rMotNeg, HIGH);    
   digitalWrite (rMotPos, LOW);
-  analogWrite(rMotPWM, 1.5*rMotSpeed);
+  analogWrite(rMotPWM, 1.5*moveSpeed);
 }
 
 void turnRight ()
 {
   digitalWrite (lMotNeg, LOW);    //left motor forward
   digitalWrite (lMotPos, HIGH);
-  analogWrite(lMotPWM, lTurnSpeed);
+  analogWrite(lMotPWM, turnSpeed);
   
   digitalWrite (rMotNeg, HIGH);    //right motor reverse
   digitalWrite (rMotPos, LOW);
-  analogWrite(rMotPWM, rTurnSpeed);
+  analogWrite(rMotPWM, turnSpeed);
 }
 
 void turnLeft ()
 {
   digitalWrite (lMotNeg, HIGH);  //left motor reverse
   digitalWrite (lMotPos, LOW);
-  analogWrite(lMotPWM, lTurnSpeed);
+  analogWrite(lMotPWM, turnSpeed);
   
   digitalWrite (rMotNeg, LOW);    //right motor forward
   digitalWrite (rMotPos, HIGH);
-  analogWrite(rMotPWM, rTurnSpeed);
+  analogWrite(rMotPWM, turnSpeed);
 }
 
 void stop() 
@@ -183,3 +189,4 @@ void stop()
   digitalWrite (rMotNeg, LOW);
   digitalWrite (rMotPos, LOW);
 }
+
